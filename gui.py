@@ -116,14 +116,80 @@ class Gui:
 
     def account_view_page(self, first_name, last_name, line_number):
         self.clear_gui()
-        Label(self.window, text=f'Welcome back, {first_name} {last_name}!', font='Helvetica 10').pack()
 
         current_account = account.create_account(line_number)
+
+        Label(self.window, text=f'Welcome back, {current_account.get_first_name()} {current_account.get_last_name()}!',
+              font='Helvetica 10').pack()
+
+        Label(self.window, text='What would you like to do today?', font='Helvetica 10').pack()
+
+
+        self.radio_frame = Frame(self.window)
+
+        self.account_choice = StringVar()
+        self.account_choice.set('N/A')
+
+        self.account_deposit = Radiobutton(self.radio_frame, text='Deposit', variable=self.account_choice,
+                                           value='Deposit'''', command=self.change_notif''')
+
+        self.account_withdrawal = Radiobutton(self.radio_frame, text='Withdraw', variable=self.account_choice,
+                                              value='Withdrawal'''', command=self.change_notif''')
+
+        self.account_deposit.pack(side='left')
+        self.account_withdrawal.pack(side='right')
+
+        self.radio_frame.pack(pady=1)
+
+        self.amount_frame = Frame(self.window)
+
+        self.amount_label = Label(self.amount_frame, text='Amount', font='Helvetica 10 bold')
+        self.amount_input = Entry(self.amount_frame)
+
+        self.amount_label.pack(side='left')
+        self.amount_input.pack()
+
+        self.amount_frame.pack()
+
+        self.flag = Label(self.window, text='', font='Helvetica 10')
+
+        self.flag.pack(anchor='center')
+
+        Button(self.window, text='ENTER', command=self.handle_cash).pack()
+
+        #self.account_withdrawal.pack(side='right', padx=10)
+
+        Label(self.window, text=f'Your current account balance is ${current_account.get_balance():.2f}',
+              font='Helvetica 10').pack()
+
+
+
+        #self.notif.config(text=f'{self.account_choice.get()}')
+
+
+
+
+        #    self.notif.config(text=f'{self.account_choice.get()}')
 
 
 
         #Label(self.window, text=f'balance = {current_account.get_balance():.2f}, name = {current_account.get_name()}').pack()
 
+    def handle_cash(self):
+        try:
+            amount = float(self.amount_input.get())
+            self.flag.config(text='')
+
+        except ValueError:
+            self.flag.config(fg='red', text='Please enter a valid number')
+
+        if self.account_choice.get() == 'N/A' or not self.amount_input.get():
+            self.flag.config(fg='red', text='All fields are required')
+    '''
+    def change_notif(self):
+        self.flag.config(text=f'{self.account_choice.get()}')
+        return
+    '''
 
 
     def register(self):
