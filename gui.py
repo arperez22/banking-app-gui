@@ -155,7 +155,7 @@ class Gui:
 
         self.flag.pack(anchor='center')
 
-        Button(self.window, text='ENTER', command=self.handle_cash).pack()
+        Button(self.window, text='ENTER', command=lambda: self.handle_cash_input(current_account)).pack()
 
         #self.account_withdrawal.pack(side='right', padx=10)
 
@@ -163,28 +163,28 @@ class Gui:
               font='Helvetica 10').pack()
 
 
-
-        #self.notif.config(text=f'{self.account_choice.get()}')
-
-
-
-
-        #    self.notif.config(text=f'{self.account_choice.get()}')
-
-
-
-        #Label(self.window, text=f'balance = {current_account.get_balance():.2f}, name = {current_account.get_name()}').pack()
-
-    def handle_cash(self):
+    def handle_cash_input(self, user_account):
         try:
             amount = float(self.amount_input.get())
             self.flag.config(text='')
 
+            if amount <= 0:
+                raise TypeError
+
         except ValueError:
             self.flag.config(fg='red', text='Please enter a valid number')
 
+        except TypeError:
+            self.flag.config(fg='red', text='Please enter a positive number')
+
         if self.account_choice.get() == 'N/A' or not self.amount_input.get():
             self.flag.config(fg='red', text='All fields are required')
+            return
+
+        account.adjust_balance(amount, user_account)
+
+
+
     '''
     def change_notif(self):
         self.flag.config(text=f'{self.account_choice.get()}')

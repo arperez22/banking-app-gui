@@ -86,19 +86,19 @@ def create_account(line_number):
                 balance = float(row[4])
                 break
 
-    account = Account(line_number, first_name, last_name, balance)
+    user_account = Account(line_number, first_name, last_name, balance)
 
-    return account
+    return user_account
 
 
-def adjust_balance(value, line_number):
+def adjust_balance(value, user_account):
     with open('accounts.csv', 'r') as file:
         reader = csv.reader(file)
         data = list(reader)
 
-    data[line_number][4] = value
+    data[user_account.get_line_number()][4] = user_account.get_balance() + value
 
-    with open('accounts.csv', 'w') as file:
+    with open('accounts.csv', 'w', newline='') as file:
         writer = csv.writer(file)
         writer.writerows(data)
 
