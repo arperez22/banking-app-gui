@@ -11,19 +11,21 @@ class Account:
         balance   (float): The balance of the account
     """
 
-    def __init__(self, line_number: int, first_name: str, last_name: str, balance: float = 0.00) -> None:
+    def __init__(self, line_number: int, first_name: str, last_name: str, account_number: int, balance: float = 0.00) -> None:
         """
         Initializes an account object
 
-        :param line_number (int): The number of the line that the account's information is stored on in a csv file
-        :param first_name  (str): The first name of the account owner
-        :param last_name   (str): The last name of the account owner
-        :param balance   (float): The balance of the account
+        :param line_number    (int): The number of the line that the account's information is stored on in a csv file
+        :param first_name     (str): The first name of the account owner
+        :param last_name      (str): The last name of the account owner
+        :param account_number (int): The identification number of the account
+        :param balance       (float): The balance of the account
         """
 
         self.__account_line_number = line_number
         self.__account_first_name = first_name
         self.__account_last_name = last_name
+        self.__account_number = account_number
         self.__account_balance = balance
 
         self.set_balance(balance)
@@ -85,6 +87,14 @@ class Account:
         """
 
         return self.__account_last_name
+
+    def get_account_number(self) -> int:
+        """
+        Accesses the private variable, account_number
+        :return: The identification number of the account
+        """
+
+        return self.__account_number
 
     def get_line_number(self) -> int:
         """
@@ -161,10 +171,11 @@ def create_account(line_number: int) -> Account:
             if index == line_number:
                 first_name = row[0]
                 last_name = row[1]
+                account_number = int(row[2])
                 balance = float(row[4])
                 break
 
-    user_account = Account(line_number, first_name, last_name, balance)
+    user_account = Account(line_number, first_name, last_name, account_number, balance)
 
     return user_account
 
