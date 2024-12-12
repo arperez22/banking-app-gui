@@ -1,6 +1,6 @@
 from tkinter import *
 from account import *
-from typing import Iterable
+from PIL import ImageTk, Image
 import csv, random
 
 
@@ -12,6 +12,8 @@ class Gui:
 
     def __init__(self, window) -> None:
         self.window: Misc = window
+        self.sign_in_frame = None
+        self.create_button = Button()
 
         self.front_page()
 
@@ -19,23 +21,32 @@ class Gui:
     def front_page(self) -> None:
         self.clear_gui()
 
-        self.welcome_frame: Frame = Frame(self.window)
-        self.welcome_label: Label = Label(self.welcome_frame, text='Welcome!', font='Helvetica 10 bold')
+        img = Image.open('images/bank.png')
+        img = img.resize((300, 211), Image.LANCZOS)
+        img = ImageTk.PhotoImage(img)
 
-        self.welcome_label.pack(side='left', padx=10)
+        self.welcome_frame: Frame = Frame(self.window)
+        self.welcome_label: Label = Label(self.welcome_frame, text='Welcome to the Bank!', font='Helvetica 10 bold')
+
+        self.welcome_label.pack(side='left', padx=10, pady=10)
         self.welcome_frame.pack()
 
         self.start_frame: Frame = Frame(self.window)
         self.start_label: Label = Label(self.start_frame, text='Sign in or Register a New Account')
 
-        self.start_label.pack(side='left', padx=10)
+        self.start_label.pack(padx=10)
+
+
+        self.bank_label: Label = Label(self.start_frame, image=img)
+        self.bank_label.image = img
+        self.bank_label.pack(pady=10)
         self.start_frame.pack()
 
         self.button_sign_in: Button = Button(self.window, text='SIGN IN', command=self.sign_in)
-        self.button_create:  Button = Button(self.window, text='REGISTER', command=self.register)
+        self.button_register:  Button = Button(self.window, text='REGISTER', command=self.register)
 
         self.button_sign_in.pack(side='left', padx=75)
-        self.button_create.pack(side='right', padx=50)
+        self.button_register.pack(side='right', padx=70)
 
         return
 
@@ -47,16 +58,16 @@ class Gui:
         self.login_answer.set(0)
 
         self.radio_names:   Radiobutton = Radiobutton(self.login_frame, text='First/Last Names',
-                                                      variable=self.login_answer, value=1,
+                                                      font='Helvetica 10',variable=self.login_answer, value=1,
                                                       command=self.create_name_entries)
 
-        self.radio_account: Radiobutton = Radiobutton(self.login_frame, text='Account Number',
+        self.radio_account: Radiobutton = Radiobutton(self.login_frame, text='Account Number',font='Helvetica 10',
                                                       variable=self.login_answer, value=2,
                                                       command=self.create_account_entry)
 
-        self.login_label.pack(anchor='center', padx=0, pady=0)
-        self.radio_names.pack(side='left', padx=10, pady=0)
-        self.radio_account.pack(side='left', padx=10, pady=0)
+        self.login_label.pack(anchor='center', padx=0, pady=10)
+        self.radio_names.pack(side='left', padx=10, pady=10)
+        self.radio_account.pack(side='left', padx=10, pady=10)
 
         self.login_frame.pack()
 
@@ -72,8 +83,14 @@ class Gui:
         self.notif.pack(anchor='center')
 
         # Buttons
-        Button(self.window, text='SIGN IN', command=self.validate_sign_in).pack(padx=10, pady=0, side='right')
-        Button(self.window, text='BACK', command=self.front_page).pack(padx=10, pady=0, side='left')
+        self.sign_in_frame = Frame(self.window)
+
+        self.sign_in_button = Button(self.sign_in_frame, text='SIGN IN', command=self.validate_sign_in)
+        self.to_home_button = Button(self.sign_in_frame, text='BACK', command=self.front_page)
+
+        self.sign_in_button.pack(padx=75, pady=30, side='right')
+        self.to_home_button.pack(padx=75, pady=30, side='left')
+        self.sign_in_frame.pack()
 
     def validate_sign_in(self) -> None:
 
@@ -125,9 +142,12 @@ class Gui:
         self.clear_gui()
 
         Label(self.window, text=f'Welcome back, {user_account.get_first_name()} {user_account.get_last_name()}!',
-              font='Helvetica 10').pack()
+              font='Helvetica 10').pack(pady=5)
 
-        Label(self.window, text='What would you like to do today?', font='Helvetica 10').pack()
+        Label(self.window, text=f'Account Number: {user_account.get_account_number()}',
+              font='Helvetica 10').pack(pady=5)
+
+        Label(self.window, text='What would you like to do today?', font='Helvetica 10').pack(pady=5)
 
 
         self.radio_frame: Frame = Frame(self.window)
@@ -144,7 +164,7 @@ class Gui:
         self.account_deposit.pack(side='left')
         self.account_withdrawal.pack(side='right')
 
-        self.radio_frame.pack(pady=1)
+        self.radio_frame.pack(pady=10)
 
         self.amount_frame: Frame = Frame(self.window)
 
@@ -152,9 +172,9 @@ class Gui:
         self.amount_input: Entry = Entry(self.amount_frame)
 
         self.amount_label.pack(side='left')
-        self.amount_input.pack()
+        self.amount_input.pack(side='right')
 
-        self.amount_frame.pack()
+        self.amount_frame.pack(pady=10)
 
         self.flag: Label = Label(self.window, text='', font='Helvetica 10')
 
@@ -175,7 +195,7 @@ class Gui:
 
         self.balance_frame.pack()
 
-        Button(self.window, text='SIGN OUT', command=self.front_page).pack()
+        Button(self.window, text='SIGN OUT', command=self.front_page).pack(pady=15)
 
         return
 
@@ -218,6 +238,11 @@ class Gui:
 
     def register(self) -> None:
         self.clear_gui()
+        self.create_button = None
+
+        self.register_label = Label(self.window, text='Create a Bank account', font='Helvetica 10 bold')
+        self.register_label.pack(pady=10)
+
         self.create_name_entries()
 
         # Notification
@@ -225,8 +250,13 @@ class Gui:
         self.notif.pack(anchor='center')
 
         # Buttons
-        Button(self.window, text='CREATE ACCOUNT', command=self.validate_registration).pack(expand=True)
-        Button(self.window, text='BACK', command=self.front_page).pack(expand=True)
+        self.register_frame = Frame(self.window)
+
+        self.create_button = Button(self.register_frame, text='CREATE ACCOUNT', command=self.validate_registration)
+        self.create_button.pack(side='right', padx=50, pady=20)
+        Button(self.register_frame, text='BACK', command=self.front_page).pack(side='left', padx=50, pady=20)
+
+        self.register_frame.pack()
 
         return
 
@@ -282,12 +312,12 @@ class Gui:
     def create_name_frames(self) -> None:
         # Create first name frame
         self.firstname_frame: Frame = Frame(self.window)
-        self.firstname_label: Label = Label(self.firstname_frame, text='First Name', font='Helvetica 8 bold')
+        self.firstname_label: Label = Label(self.firstname_frame, text='First Name', font='Helvetica 10 bold')
         self.firstname_input: Entry = Entry(self.firstname_frame)
 
         # Create last name frame
         self.lastname_frame: Frame = Frame(self.window)
-        self.lastname_label: Label = Label(self.lastname_frame, text='Last Name', font='Helvetica 8 bold')
+        self.lastname_label: Label = Label(self.lastname_frame, text='Last Name', font='Helvetica 10 bold')
         self.lastname_input: Entry = Entry(self.lastname_frame)
 
         self.NAME_FRAMES_EXIST = True
@@ -307,15 +337,17 @@ class Gui:
         self.create_name_frames()
         self.create_password_frame()
 
-        # Pack first name frame
+        if self.sign_in_frame:
+            self.sign_in_frame.forget()
 
+        # Pack first name frame
         self.firstname_label.pack(side='left')
-        self.firstname_input.pack(side='left')
+        self.firstname_input.pack(side='left', padx=65)
         self.firstname_frame.pack(anchor='w')
 
         # Pack last name frame
         self.lastname_label.pack(side='left')
-        self.lastname_input.pack(side='left')
+        self.lastname_input.pack(side='left', padx=66)
         self.lastname_frame.pack(anchor='w')
 
         self.create_password_entry()
@@ -325,7 +357,7 @@ class Gui:
     def create_account_frame(self) -> None:
         # Create account frame
         self.account_frame: Frame = Frame(self.window)
-        self.account_label: Label = Label(self.account_frame, text='Account Number', font='Helvetica 8 bold')
+        self.account_label: Label = Label(self.account_frame, text='Account Number', font='Helvetica 10 bold')
         self.account_input: Entry = Entry(self.account_frame)
 
         self.ACCOUNT_FRAMES_EXIST = True
@@ -345,9 +377,11 @@ class Gui:
         self.create_account_frame()
         self.create_password_frame()
 
+        self.sign_in_frame.forget()
+
         # Pack account frame
         self.account_label.pack(side='left')
-        self.account_input.pack(side='left')
+        self.account_input.pack(side='left', padx=28)
         self.account_frame.pack(anchor='w')
 
         self.create_password_entry()
@@ -357,7 +391,7 @@ class Gui:
     def create_password_frame(self) -> None:
         # Password
         self.password_frame: Frame = Frame(self.window)
-        self.password_label: Label = Label(self.password_frame, text='Enter Password', font='Helvetica 8 bold')
+        self.password_label: Label = Label(self.password_frame, text='Enter Password', font='Helvetica 10 bold')
         self.password_input: Entry = Entry(self.password_frame, show='\u2022')
 
         return
@@ -365,8 +399,11 @@ class Gui:
     def create_password_entry(self) -> None:
         # Pack password frame
         self.password_label.pack(side='left')
-        self.password_input.pack(side='left')
+        self.password_input.pack(side='left', padx=35)
         self.password_frame.pack(anchor='w')
+
+        if self.create_button:
+            self.sign_in_frame.pack()
 
         return
 
