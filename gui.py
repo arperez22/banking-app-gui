@@ -1,17 +1,15 @@
 from tkinter import *
-from account import *
+from logic import *
 from PIL import ImageTk, Image
-import csv, random
 
-
-existing_accounts: set[int] = get_existing_accounts()
+user_account: Account = None
 
 class Gui:
     NAME_FRAMES_EXIST: bool = False
     ACCOUNT_FRAMES_EXIST: bool = False
 
     def __init__(self, window) -> None:
-        self.window: Misc = window
+        self.window= window
         self.sign_in_frame = None
         self.create_button = Button()
 
@@ -19,10 +17,17 @@ class Gui:
 
 
     def front_page(self) -> None:
+        """
+        Clears widgets then initializes and displays the welcome page of the banking app
+        """
+
         self.clear_gui()
 
+        global user_account
+        user_account = None
+
         img = Image.open('images/bank.png')
-        img = img.resize((300, 211), Image.LANCZOS)
+        img = img.resize((300, 211))
         img = ImageTk.PhotoImage(img)
 
         self.welcome_frame: Frame = Frame(self.window)
@@ -43,14 +48,22 @@ class Gui:
         self.start_frame.pack()
 
         self.button_sign_in: Button = Button(self.window, text='SIGN IN', command=self.sign_in)
-        self.button_register:  Button = Button(self.window, text='REGISTER', command=self.register)
+        self.button_register:  Button = Button(self.window, text='REGISTER', command=self.registration_page)
 
         self.button_sign_in.pack(side='left', padx=75)
         self.button_register.pack(side='right', padx=70)
 
         return
 
+
     def choose_sign_in_mode(self) -> None:
+        """
+        Handles the sign-in choice from the user by displaying radio buttons with
+        two sign-in options.  If the First/Last Names option is chosen, the first name,
+        last name, and password entries are displayed.  If the Account Number option
+        is chosen, the account number and password entries are displayed.
+        """
+
         self.login_frame: Frame = Frame(self.window)
         self.login_label: Label = Label(self.login_frame, text='Sign in with Name or Account Number',
                                  font='Helvetica 10 bold')
@@ -75,6 +88,10 @@ class Gui:
 
 
     def sign_in(self) -> None:
+        """
+        Clears widgets then initializes and displays the sign-in page of the banking app
+        """
+
         self.clear_gui()
         self.choose_sign_in_mode()
 
@@ -92,7 +109,15 @@ class Gui:
         self.to_home_button.pack(padx=75, pady=30, side='left')
         self.sign_in_frame.pack()
 
+
     def validate_sign_in(self) -> None:
+        """
+        Validates the sign-in information from the user.  If the information
+        does not match any found in the csv file, an error is shown and the
+        user is notified.
+        """
+
+        global user_account
 
         if self.login_answer.get() == 1:
             first_name: str = self.firstname_input.get().strip()
@@ -104,16 +129,14 @@ class Gui:
                 self.notif.config(fg='red', text='All fields are required')
                 return
 
-            with open('accounts.csv', 'r') as file:
-                reader = csv.reader(file)
-                next(reader) # Skip header
+            user_account = search_existing_accounts(first_name=first_name, last_name=last_name,
+                                                    account_number='', password=password)
 
-                for line_number, row in enumerate(reader):
-                    if first_name == row[0] and last_name == row[1] and password == row[3]:
-                        user_account: Account = create_account(line_number + 1)
-                        self.account_view_page(user_account)
+            if not user_account:
+                self.notif.config(fg='red', text='Account does not exist')
+                return
 
-            self.notif.config(fg='red', text='Account does not exist')
+            self.account_view_page()
 
         elif self.login_answer.get() == 2:
             account_number: str = self.account_input.get().strip()
@@ -124,21 +147,23 @@ class Gui:
                 self.notif.config(fg='red', text='All fields are required')
                 return
 
-            with open('accounts.csv', 'r') as file:
-                reader = csv.reader(file)
-                next(reader) # Skip reader
+            user_account = search_existing_accounts(first_name='', last_name='',
+                                                    account_number=account_number, password=password)
 
-                for line_number, row in enumerate(reader):
-                    if account_number == row[2] and password == row[3]:
-                        user_account: Account = create_account(line_number + 1)
-                        self.account_view_page(user_account)
+            if not user_account:
+                self.notif.config(fg='red', text='Account does not exist')
+                return
 
-            self.notif.config(fg='red', text='Account does not exist')
+            self.account_view_page()
 
         return
 
 
-    def account_view_page(self, user_account: Account) -> None:
+    def account_view_page(self) -> None:
+        """
+        Clears widgets and initializes and displays the account-view page
+        """
+
         self.clear_gui()
 
         Label(self.window, text=f'Welcome back, {user_account.get_first_name()} {user_account.get_last_name()}!',
@@ -180,7 +205,7 @@ class Gui:
 
         self.flag.pack(anchor='center')
 
-        Button(self.window, text='ENTER', command=lambda: self.handle_cash_input(user_account)).pack()
+        Button(self.window, text='ENTER', command=self.handle_cash_input).pack()
 
         self.balance_frame: Frame = Frame(self.window)
 
@@ -200,8 +225,16 @@ class Gui:
         return
 
 
-    def handle_cash_input(self, user_account: Account) -> None:
+    def handle_cash_input(self) -> None:
+        """
+        Validates the deposit/withdrawal information from the user.
+        If the user enters any value that isn't a number or a negative
+        number in the amount entry, an error is shown and the user is
+        notified.
+        """
+
         amount = 0
+        global user_account
 
         try:
             amount: float = float(self.amount_input.get())
@@ -212,9 +245,13 @@ class Gui:
 
         except ValueError:
             self.flag.config(fg='red', text='Please enter a valid number')
+            self.adjustment_label.config(fg='red', text='')
+            return
 
         except TypeError:
             self.flag.config(fg='red', text='Please enter a positive number')
+            self.adjustment_label.config(fg='red', text='')
+            return
 
         if self.account_choice.get() == 'N/A' or not self.amount_input.get():
             self.flag.config(fg='red', text='All fields are required')
@@ -226,7 +263,7 @@ class Gui:
 
         else:
             if not user_account.withdraw(amount):
-                self.adjustment_label.config(fg='red',text=f'Insufficient Funds')
+                self.adjustment_label.config(fg='red',text='Insufficient Funds')
 
             else:
                 self.adjustment_label.config(fg='black', text=f'You just withdrew ${amount:.2f}')
@@ -236,7 +273,12 @@ class Gui:
         return
 
 
-    def register(self) -> None:
+    def registration_page(self) -> None:
+        """
+        Clears widgets and initializes and displays the registration
+        page
+        """
+
         self.clear_gui()
         self.create_button = None
 
@@ -262,6 +304,14 @@ class Gui:
 
 
     def validate_registration(self) -> None:
+        """
+        Validates registration information from the user.  If the
+        input names from the user are already in the csv file, an
+        error will occur and the user will be notified.
+        """
+
+        global user_account
+
         first_name: str = self.firstname_input.get().strip()
         last_name:  str = self.lastname_input.get().strip()
         password:   str = self.password_input.get().strip()
@@ -271,35 +321,29 @@ class Gui:
             self.notif.config(fg='red', text='All fields are required')
             return
 
-        # Check CSV file to prevent duplicate accounts
-        with open('accounts.csv', 'r') as file:
-            reader = csv.reader(file)
-            next(reader) # Skip header
+        user_account = search_existing_accounts(first_name=first_name, last_name=last_name,
+                                                account_number='', password='')
 
-            for row in reader:
-                if first_name == row[0] and last_name == row[1]:
-                    self.notif.config(fg='red', text='*Account Already Exists')
-                    return
+        if user_account is not None:
+            self.notif.config(fg='red', text='Account Already Exists')
+            return
 
-        account_number: int = random.randint(10000000, 90000000)
-
-        while account_number in existing_accounts:
-            account_number = random.randint(10000000, 90000000)
-
-        existing_accounts.add(account_number)
+        account_number = save_account_info(first_name, last_name, password)
 
         self.notif.config(fg='black', text=f'Welcome, {first_name} {last_name}!\n '
                                            f'Your account number is {account_number}')
 
-        with open('accounts.csv', 'a', newline='') as file:
-            content = csv.writer(file, delimiter=',')
-
-            content.writerow([first_name, last_name, str(account_number), password, '0.00'])
+        user_account = None
 
         return
 
 
     def clear_gui(self) -> None:
+        """
+        Destroys all widgets that exist on the window.  Sets
+        NAME_FRAMES_EXIST and ACCOUNT_FRAMES_EXIST class
+        variables to False.
+        """
 
         for widget in self.window.winfo_children():
             widget.destroy()
@@ -309,7 +353,15 @@ class Gui:
 
         return
 
+
     def create_name_frames(self) -> None:
+        """
+        Creates frames for first name input and last name
+        input.  These frames are shown on the sign-in page
+        and registration page.  After the frames are
+        created, NAME_FRAMES_EXIST is set to True.
+        """
+
         # Create first name frame
         self.firstname_frame: Frame = Frame(self.window)
         self.firstname_label: Label = Label(self.firstname_frame, text='First Name', font='Helvetica 10 bold')
@@ -324,7 +376,13 @@ class Gui:
 
         return
 
+
     def create_name_entries(self) -> None:
+        """
+        Packs the name and password frames after creating them if they don't
+        already exist.  Also destroys the account frames if they exist.
+        """
+
         # Check if account frame currently exists
         if self.ACCOUNT_FRAMES_EXIST:
             self.destroy_account_frame()
@@ -354,7 +412,15 @@ class Gui:
 
         return
 
+
     def create_account_frame(self) -> None:
+        """
+        Creates frames for the account number input.
+        These frames are shown on the sign-in page
+        and registration page.  After the frames are
+        created, ACCOUNT_FRAMES_EXIST is set to True.
+        """
+
         # Create account frame
         self.account_frame: Frame = Frame(self.window)
         self.account_label: Label = Label(self.account_frame, text='Account Number', font='Helvetica 10 bold')
@@ -364,7 +430,13 @@ class Gui:
 
         return
 
+
     def create_account_entry(self) -> None:
+        """
+        Packs the account and password frames after creating them if they don't
+        already exist.  Also destroys the name frames if they exist.
+        """
+
         # Check if name frames currently exist
         if self.NAME_FRAMES_EXIST:
             self.destroy_name_frames()
@@ -388,7 +460,14 @@ class Gui:
 
         return
 
+
     def create_password_frame(self) -> None:
+        """
+        Creates frame for the password input.
+        This frame is shown on the sign-in page
+        and registration page.
+        """
+
         # Password
         self.password_frame: Frame = Frame(self.window)
         self.password_label: Label = Label(self.password_frame, text='Enter Password', font='Helvetica 10 bold')
@@ -396,7 +475,12 @@ class Gui:
 
         return
 
+
     def create_password_entry(self) -> None:
+        """
+        Packs the password frame
+        """
+
         # Pack password frame
         self.password_label.pack(side='left')
         self.password_input.pack(side='left', padx=35)
@@ -407,7 +491,13 @@ class Gui:
 
         return
 
+
     def destroy_name_frames(self) -> None:
+        """
+        Destroys the names frames if they exist.
+        Sets NAME_FRAMES_EXIST to False.
+        """
+
         # Destroy name and password frames
         self.firstname_frame.destroy()
         self.lastname_frame.destroy()
@@ -416,7 +506,13 @@ class Gui:
 
         return
 
+
     def destroy_account_frame(self) -> None:
+        """
+        Destroys the account frame if it exists.
+        Sets ACCOUNT_FRAMES_EXIST to False.
+        """
+
         # Destroy account frame
         self.account_frame.destroy()
 
@@ -424,7 +520,12 @@ class Gui:
 
         return
 
+
     def destroy_password_frame(self) -> None:
+        """
+        Destroys the password frame if it exists
+        """
+
         # Destroy password frame
         self.password_frame.destroy()
 

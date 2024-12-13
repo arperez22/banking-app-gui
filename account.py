@@ -1,4 +1,4 @@
-import csv
+import logic
 
 class Account:
     """
@@ -43,7 +43,7 @@ class Account:
 
         self.__account_balance += amount
 
-        adjust_balance(self)
+        logic.adjust_balance(self)
 
         return True
 
@@ -60,7 +60,7 @@ class Account:
 
         self.__account_balance -= amount
 
-        adjust_balance(self)
+        logic.adjust_balance(self)
 
         return True
 
@@ -141,57 +141,3 @@ class Account:
         return (f'Account name = {self.get_first_name() + '' + self.get_last_name()},'
                 f' Account balance = {self.get_balance():.2f}')
 
-def get_existing_accounts() -> set[int]:
-    """
-    Create a set with the existing account numbers
-    :return: A set of 8-digit integers containing all the account numbers listed in the accounts database
-    """
-    account_numbers = set()
-
-    with open('accounts.csv', 'r') as file:
-        reader = csv.reader(file)
-        next(reader)
-
-        for row in reader:
-            account_numbers.add(int(row[2]))
-
-    return account_numbers
-
-def create_account(line_number: int) -> Account:
-    """
-    Creates a new account object from the accounts database
-    :param line_number: Specifies the line on which the account information is located in the accounts database
-    :return: An account object with the account information found on the line specified by line number
-    """
-
-    with open('accounts.csv', 'r') as file:
-        reader = csv.reader(file)
-
-        for index, row in enumerate(reader):
-            if index == line_number:
-                first_name = row[0]
-                last_name = row[1]
-                account_number = int(row[2])
-                balance = float(row[4])
-                break
-
-    user_account = Account(line_number, first_name, last_name, account_number, balance)
-
-    return user_account
-
-
-def adjust_balance(user_account: Account) -> None:
-    """
-    Changes the balance shown in the accounts database for the provided account
-    :param user_account: The account for which the balance will be adjusted
-    """
-
-    with open('accounts.csv', 'r') as file:
-        reader = csv.reader(file)
-        data = list(reader)
-
-    data[user_account.get_line_number()][4] = user_account.get_balance()
-
-    with open('accounts.csv', 'w', newline='') as file:
-        writer = csv.writer(file)
-        writer.writerows(data)
