@@ -1,4 +1,4 @@
-import logic
+import bank
 
 class Account:
     """
@@ -43,7 +43,7 @@ class Account:
 
         self.__account_balance += amount
 
-        logic.adjust_balance(self)
+        bank.adjust_balance(self)
 
         return True
 
@@ -60,7 +60,7 @@ class Account:
 
         self.__account_balance -= amount
 
-        logic.adjust_balance(self)
+        bank.adjust_balance(self)
 
         return True
 

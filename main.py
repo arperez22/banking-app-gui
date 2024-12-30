@@ -1,4 +1,5 @@
-from gui import *
+from tkinter import Tk
+from bank import Bank
 
 def main():
     window = Tk()
@@ -6,7 +7,7 @@ def main():
     window.geometry('400x400')
     window.resizable(False, False)
 
-    Gui(window)
+    Bank(window)
 
     window.mainloop()
 
